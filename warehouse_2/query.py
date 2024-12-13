@@ -61,17 +61,18 @@ def credential_validator(func):
                   )
 
             new_choice = input("\nType (y) to retry, (c) to change the username and (q) to quit: ").lower()
-            if new_choice.lower() == 'c':
+            if new_choice in ['c', 'change']:
                 user_name = input('\nType your username: ').capitalize()
 
-            elif new_choice.lower() == 'q':
+            elif new_choice in ['q', 'quit']:
                 new_operation()
                 return None
-            elif new_choice.lower() == 'y':
-                # print("Invalid choice. Please try again.")
+            elif new_choice in ['y', 'yes']:
                 continue
 
     return inner
+# try to improve fucntion by finding if username is part of personnel[username] but no corresponding password
+      
                 # return None
 
             # for credential in personnel:
@@ -83,21 +84,6 @@ def credential_validator(func):
                 
             #     elif user_name == credential['user_name'] and password != credential['password']:
             #         print("Invalid password. Please try again.")
-
-            #     else:
-            #         print("Invalid credential. \nUser-name and Password can't be matched. \nPlease try again.")
-            #         password == None
-            #         user_name = None
-            # retry = input("would you like to retry to authenticate (y/n): ").lower()
-            # if not retry in ['y', 'yes']:
-            #     new_operation()
-            #     return None
-
-        # print(f"Authenticated: username: {user_name} -- password: {password}")
-        # print('\n', '*' * 50, '\n')
-        # func(*args, **kwargs)
-
-
 
 
 def get_username():
@@ -156,10 +142,10 @@ def new_operation():
         new_operation_choice = input("\nWould you like to perform another operation? (y/n): ")
         if new_operation_choice.lower() in ['y', 'yes']:
             new_op = True
-            menu(user_name)
+            return menu(user_name)
         elif new_operation_choice.lower() in ['n', 'no']:
             new_op = True
-            exit(user_name)
+            return exit(user_name)
 
 
 
@@ -172,13 +158,11 @@ def list_item_by_warehouse():
         )
     
     warehouse_choice = input("Please type here Warehouse choice: ").strip().lower()
-    # num_item = 0
 
     # if user press 'q' then back to the menu:
     if warehouse_choice == 'q':
         print("Back to main menu.")
         print("\n\n", "*"*30)
-
         return menu(user_name)
     
     # simply press Enter/Return:  select all warehouses, sort them by warehouse order.
@@ -191,9 +175,9 @@ def list_item_by_warehouse():
             else:
                 print(f"{num_item}. {list}")
 
-        # add to the list of operations user checked items from all warehouses
-        new_op = f"you have listed {len(list_stock_item)} items from all the warehouses."
-        list_of_operations.append(new_op)
+        # add to the list of operations: user checked items from all warehouses
+        save_query = f"you have listed {len(list_stock_item)} items from all the warehouses."
+        list_of_operations.append(save_query)
         
         return new_operation()
 
@@ -211,10 +195,11 @@ def list_item_by_warehouse():
         # if user selected non existent warehouse, does not add to the operation list
         if len(list_stock_item) == 0 or int(warehouse_choice) <= 0:
             print("it doesn't looks like this warehouse exists yet.\n")
-        # add to the list of operations that user checked items from a specific warehouse.
+
+        # add to the list of operations: user checked items from a specific warehouse.
         else:
-            new_op = f"you have listed {len(list_stock_item)} items from warehouse {warehouse_choice}."
-            list_of_operations.append(new_op)
+            save_query = f"you have listed {len(list_stock_item)} items from warehouse {warehouse_choice}."
+            list_of_operations.append(save_query)
         
         return new_operation()
     
@@ -238,28 +223,17 @@ def search_item(user_name):
 
     # if user press 'q' then back to the menu:
     if item_searched == 'q':
-        menu(user_name)
-    else:
-        pass
+        return menu(user_name)
 
-    # display items in warehouse from the dictionary key 'category'.
-    #     # if the user wants to search all warehouses, then search in all warehouses.
-    #     if int(warehouse_choice) == 0 and item_searched == item['category']:
-    #         number_item += 1
-    #         print(f"product {num}: {item}\n")
-    #     # if the user wants to search in one specific warehouse.
-    #     elif int(warehouse_choice) == item['warehouse'] and item_searched == item['category']:
-    #         number_item += 1
-    #         print(f"product {num}: {item}\n")
 
     # list_products_searched added to record of operations performed
-    add_search_item = f"You searched for '{item_searched}'."
-    list_of_operations.append(add_search_item)
+    save_query = f"You searched for '{item_searched}'."
+    list_of_operations.append(save_query)
 
     num = 0 # numbers individually each items in the warehouses globally
     list_item_searched = [] # will hold the list of items searched.
 
-    for item in stock[:1500]:
+    for item in stock[:1500]: # only sample over part of the stock
         num += 1 
         # user search item through all warehouses.
         if item_searched == item['category']:
@@ -278,7 +252,7 @@ def search_item(user_name):
     while user_order not in ['y', 'yes', 'no', 'n']:
         user_order = input(f"Would you like to order this item: '{item_searched}'?(y/n).  ").lower()
         if user_order in ['y', 'yes']:
-            ordering(list_item_searched, item_searched)
+            return ordering(list_item_searched, item_searched)
 
         elif user_order.lower() in ['n', 'no']:
             return new_operation()
@@ -286,9 +260,6 @@ def search_item(user_name):
         else:
             print('Invalid choice. Please choose from the option: y or n.')
             
-            
-
-    # return list_item_searched, item_searched,
 
 
 @credential_validator
@@ -318,7 +289,7 @@ def ordering(list_item_searched: list, item_searched: str ):
             else:
                 pass
 
-        elif item_order_qty == 0:
+        elif item_order_qty == 0: # cancel the order
             print('you have not ordered anything / Cancelled')
             order_process = True
 
@@ -326,23 +297,44 @@ def ordering(list_item_searched: list, item_searched: str ):
             print(f"you have successfully ordered {item_order_qty} '{item_searched}': {random.choice(list_item_searched)}.\n")
             order_process = True
 
-        else:
+        else: # user ordered several items
             print(f"you have successfully ordered {item_order_qty} {item_searched}s: {random.choice(list_item_searched)}.\n")
             order_process = True
 
-
         if order_process == True and item_order_qty != 0:
             list_of_operations.pop(-1)
-            list_op = f"you ordered {item_order_qty} {item_searched}."
-            list_of_operations.append(list_op)
+            save_query = f"you ordered {item_order_qty} {item_searched}."
+            list_of_operations.append(save_query)
 
-    new_operation()
+    return new_operation()
+
+
 
 
 def browse_by_category():
     ''' user can browse the stock warehouse by category'''
-    print(f"function not implemented yet...")
-    new_operation()
+
+    # item_searched = None
+    item_searched = input("Type the product category you want to browse: ").capitalize()
+    print(f"\nHere are the available products for the category {item_searched}:\n")
+
+    category_list = []
+    for item in stock[:1000]: # sample over part of the stock
+        if item_searched == item['category'] or item_searched == item['state']:
+            category_list.append(item)
+            browse_searched = f"{item['state']} {item['category']}  --  found in warehouse-{item['warehouse']} - in stock since: {item['date_of_stock']}\n"
+            print(browse_searched)
+    
+    # if category found, then is added to the list of user's operation during the session
+    if len(category_list) > 0:
+        save_op = f"Browsed the category {item_searched}."
+        list_of_operations.append(save_op)
+    else:
+        print(f"'{item_searched}' category not found in any warehouses.\n")
+
+
+    return new_operation()
+
 
 
 def exit(user_name):
@@ -357,7 +349,7 @@ def exit(user_name):
         for operation in list_of_operations:
             num += 1
             print(f"\n  {num}. {operation}")
-    print(f"\nThank you for using our inventory management system.\n\nGoodbye {user_name}!")
+    print(f"\nThank you for using our inventory management system.\n\nGoodbye {user_name}!\n")
 
 
 def main():
