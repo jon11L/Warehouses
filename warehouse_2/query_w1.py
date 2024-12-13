@@ -2,7 +2,7 @@ from CLI.data import stock, personnel
 import random
 
 # YOUR CODE STARTS HERE
-user_name: str = None
+# user_name: str = None
 list_of_operations: list = []
 is_authenticated = False
 
@@ -53,27 +53,23 @@ def credential_validator(func):
         # check with find_personel if credentials match one of the personel, return True if correct and False otherwise.
             if find_personnel(user_name, password, personnel):
                 is_authenticated = True
-                print(f"login successful. for user: {user_name}")
+                print(f"\n**Login successful.**\n Authenticated user: {user_name}\n")
                 return func(*args, **kwargs)
 
-            print("\n**Invalid credential**. \nUser-name and Password can't be matched. \nPlease try again.")
-            
-            # check for the user-name
-            change_user_name = input("\nWould you like to change your username?(y/n/q(to quit): ").lower()
-            if change_user_name.lower() in ['y', 'yes']:
+            print("\n**Invalid credential**.",
+                  f"\nuser-name and password could not be matched for User: '{user_name}' - Pw: '{password}'."
+                  )
+
+            new_choice = input("\nType (y) to retry, (c) to change the username and (q) to quit: ").lower()
+            if new_choice.lower() == 'c':
                 user_name = input('\nType your username: ').capitalize()
 
-            elif change_user_name.lower() == 'q':
+            elif new_choice.lower() == 'q':
                 new_operation()
                 return None
-            
-            else:
-                print(f"user: {user_name}.")
-
-            password = input('\nEnter your Password: ')
-            print(f" Entered password: {password}")
-            # return inner
-
+            elif new_choice.lower() == 'y':
+                # print("Invalid choice. Please try again.")
+                continue
 
     return inner
                 # return None
@@ -106,7 +102,7 @@ def credential_validator(func):
 
 def get_username():
     '''Get the user name.'''
-    # global user_name
+    global user_name
     user_name = input('What is your user name? ').capitalize()
     return user_name
 
@@ -182,8 +178,8 @@ def list_item_by_warehouse():
     if warehouse_choice == 'q':
         print("Back to main menu.")
         print("\n\n", "*"*30)
-        menu(user_name)
-        return
+
+        return menu(user_name)
     
     # simply press Enter/Return:  select all warehouses, sort them by warehouse order.
     elif warehouse_choice == "": 
@@ -283,15 +279,16 @@ def search_item(user_name):
         user_order = input(f"Would you like to order this item: '{item_searched}'?(y/n).  ").lower()
         if user_order in ['y', 'yes']:
             ordering(list_item_searched, item_searched)
-            # break
-        elif user_order.lower() == "n":
-            new_operation()
+
+        elif user_order.lower() in ['n', 'no']:
+            return new_operation()
             # break
         else:
             print('Invalid choice. Please choose from the option: y or n.')
             
+            
 
-    return list_item_searched, item_searched,
+    # return list_item_searched, item_searched,
 
 
 @credential_validator
@@ -363,18 +360,16 @@ def exit(user_name):
     print(f"\nThank you for using our inventory management system.\n\nGoodbye {user_name}!")
 
 
-# def main():
-#     user_name = get_username()
-#     greet_user(user_name)
-#     menu(user_name)
-
-
-if __name__ == "__main__":
-    # main()
+def main():
     user_name = get_username()
     greet_user(user_name)
     menu(user_name)
 
-# state : new, red Original, Second hand, Brand new, White,  .... to copy when ran
 
-# https://hurawatch.cc/watch-tv/watch-the-office-online-39383.4892284
+if __name__ == "__main__":
+    main()
+    # user_name = get_username()
+    # greet_user(user_name)
+    # menu(user_name)
+
+# state : new, red Original, Second hand, Brand new, White,  .... to copy when ran
