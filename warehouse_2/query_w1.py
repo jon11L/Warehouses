@@ -4,6 +4,7 @@ import random
 # YOUR CODE STARTS HERE
 user_name: str = None
 list_of_operations: list = []
+is_authenticated = False
 
 # ------- functions here first :  -------------
 # def decorator(func):
@@ -14,38 +15,106 @@ list_of_operations: list = []
 #         print('\n', '*' * 50, '\n')
 #     return inner
 
-# try for username/password check decorator function
-def password_validator(func):
-    ''' decorator function to decor queries of user.'''
-    def inner(*args, **kwargs):
-        print('\n', '*' * 20, '\n')
-        print("Checking credientials...")
-        if user_name == None:
-            user_name = input('Username: ')
-        else:
-            print(f"user: {user_name}.")
-        password = input('Type your Password: ')
-        func(*args, **kwargs)
-            # check if username/password is correct
-            # if personnel['username']!= username or  personnel['password']!= password:
-        print(f"you have done{list_of_operations}")
-        print(f"username: {user_name} -- password: {password}")
 
-        print('\n', '*' * 50, '\n')
+# try for username/password check decorator function
+def find_personnel(user_name, password, personnel_list):
+
+    for personnel_sub_list in personnel_list:
+        # print(f"list of personnels are {personnel_sub_list}\n")
+        if personnel_sub_list['user_name'] == user_name and personnel_sub_list['password'] == password:
+            return True
+        
+        if 'head_of' in personnel_sub_list:
+            if find_personnel(user_name, password, personnel_sub_list['head_of']):
+                return True
+    return False
+
+
+def credential_validator(func):
+    ''' decorator function to check credential of user.'''
+    def inner(*args, **kwargs):
+        global is_authenticated
+        global user_name
+
+        if is_authenticated:
+            return func(*args, **kwargs)
+
+        # password: str = None
+
+        while not is_authenticated:
+            print("*Only authenticated personnel can order in the warehouse.*\n")
+            print(f"Current user: {user_name}.")
+
+            password = input("Enter your password: ")
+            print('\n', '*' * 20, '\n')
+            print("Checking credientials...")
+
+
+        # check with find_personel if credentials match one of the personel, return True if correct and False otherwise.
+            if find_personnel(user_name, password, personnel):
+                is_authenticated = True
+                print(f"login successful. for user: {user_name}")
+                return func(*args, **kwargs)
+
+            print("\n**Invalid credential**. \nUser-name and Password can't be matched. \nPlease try again.")
+            
+            # check for the user-name
+            change_user_name = input("\nWould you like to change your username?(y/n/q(to quit): ").lower()
+            if change_user_name.lower() in ['y', 'yes']:
+                user_name = input('\nType your username: ').capitalize()
+
+            elif change_user_name.lower() == 'q':
+                new_operation()
+                return None
+            
+            else:
+                print(f"user: {user_name}.")
+
+            password = input('\nEnter your Password: ')
+            print(f" Entered password: {password}")
+            # return inner
+
+
     return inner
+                # return None
+
+            # for credential in personnel:
+            #     print(f"list of credentials are {credential}\n")
+            # # check if username/password is correct
+            #     if user_name == credential['user_name'] and password == credential['password']:
+            #         print("Valid credential. -->")
+            #         is_authenticated = True
+                
+            #     elif user_name == credential['user_name'] and password != credential['password']:
+            #         print("Invalid password. Please try again.")
+
+            #     else:
+            #         print("Invalid credential. \nUser-name and Password can't be matched. \nPlease try again.")
+            #         password == None
+            #         user_name = None
+            # retry = input("would you like to retry to authenticate (y/n): ").lower()
+            # if not retry in ['y', 'yes']:
+            #     new_operation()
+            #     return None
+
+        # print(f"Authenticated: username: {user_name} -- password: {password}")
+        # print('\n', '*' * 50, '\n')
+        # func(*args, **kwargs)
+
 
 
 
 def get_username():
     '''Get the user name.'''
-    user_name = input('What is your user name?: ').capitalize()
+    # global user_name
+    user_name = input('What is your user name? ').capitalize()
     return user_name
+
 
 def greet_user(user_name):
     '''Greet the user.'''
     print(f"\nHello {user_name}, welcome.")
     return user_name
-
 
 
 def menu(user_name):
@@ -60,7 +129,9 @@ def menu(user_name):
         try:
             menu_choice: int = int(input('Type the number of the operation: '))
         except ValueError:
-            print('Invalid input. Please enter a number.')
+            print("\n", "*"*30)
+            print("Invalid input. Please enter a valid Number.")
+            print("*"*30, "\n")
 
     # If they pick 1 and just check the list of items.
     if menu_choice == 1:
@@ -74,10 +145,10 @@ def menu(user_name):
         exit(user_name)
     else:
         # when user did not pick unavailable option
-        # print('*'*50, "\n")
-        print('Invalid choice. Please choose from the following option: 1-2-3-4.')
-        # print('*'*50, "\n")
-        menu()
+        print("\n", "*"*30)
+        print("Invalid choice. Please choose from the following option: 1-2-3-4.")
+        print("*"*30, "\n")
+        menu(user_name)
 
 # @decorator
 def new_operation():
@@ -86,7 +157,7 @@ def new_operation():
     '''
     new_op = False
     while new_op == False:
-        new_operation_choice = input("Would you like to perform another operation? (y/n): ")
+        new_operation_choice = input("\nWould you like to perform another operation? (y/n): ")
         if new_operation_choice.lower() in ['y', 'yes']:
             new_op = True
             menu(user_name)
@@ -101,44 +172,61 @@ def list_item_by_warehouse():
 
     print("\nTo enter a warehouse, type it's corresponding number ex: '1' for Warehouse N.1 etc.. (up to 4 warehouses at the moment.)",
         "\n\n  - To view items from all the warehouses available simply press 'Enter/<Return>'.",
-        "\n  - To go back to the main menu type 'q'\n"
+        "\n  - Type 'q' to go back to the main menu\n"
         )
+    
+    warehouse_choice = input("Please type here Warehouse choice: ").strip().lower()
+    # num_item = 0
 
-    warehouse_choice = input("Please type here Warehouse choice: ")
     # if user press 'q' then back to the menu:
     if warehouse_choice == 'q':
+        print("Back to main menu.")
+        print("\n\n", "*"*30)
         menu(user_name)
-    else:
-        pass
-
-
-    if warehouse_choice == "": #  select all warehouses, sort them in order.
+        return
+    
+    # simply press Enter/Return:  select all warehouses, sort them by warehouse order.
+    elif warehouse_choice == "": 
         list_stock_item = sorted(stock, key=lambda item: item['warehouse'], reverse=False)
-        print(f"{list_stock_item[30:50]}\n\n")
-    else:
+        print(f"\nstock of all warehouses:\n\n")
+        for num_item, list in enumerate(list_stock_item[800:840], start=1): # sample of 40 to showcase
+            if num_item < 10:
+                print(f"0{num_item}. {list}")
+            else:
+                print(f"{num_item}. {list}")
+
+        # add to the list of operations user checked items from all warehouses
+        new_op = f"you have listed {len(list_stock_item)} items from all the warehouses."
+        list_of_operations.append(new_op)
+        
+        return new_operation()
+
+
+    elif warehouse_choice.isdigit():
         list_stock_item = [item for item in stock if item['warehouse'] == int(warehouse_choice)]
-        print(f" Warehouse-{warehouse_choice}:\n {list_stock_item[100:130]}\n\n")
+        print(f"\nProducts of Warehouse-{warehouse_choice}:\n")
+        for num_item, list in enumerate(list_stock_item[100:130]): # sample of 30 to showcase
+            num_item += 1 # use for numerate the items displayed
+            if num_item < 10:
+                print(f"0{num_item}. {list}")
+            else:
+                print(f"{num_item}. {list}")
 
+        # if user selected non existent warehouse, does not add to the operation list
+        if len(list_stock_item) == 0 or int(warehouse_choice) <= 0:
+            print("it doesn't looks like this warehouse exists yet.\n")
+        # add to the list of operations that user checked items from a specific warehouse.
+        else:
+            new_op = f"you have listed {len(list_stock_item)} items from warehouse {warehouse_choice}."
+            list_of_operations.append(new_op)
+        
+        return new_operation()
+    
+    else:
+        print("\n\n", "*"*30, "\nInvalid input. Please enter a number or press 'Enter' to view all warehouses.\n\n", "*"*30)
+        
+        return list_item_by_warehouse()
 
-    # adding the query/operation to the list of user's operation during their visit of the warehouse.
-    new_op: str = None
-    number_item = 0
-
-    if list_stock_item != None and warehouse_choice == "":
-        for item in list_stock_item:
-            number_item += 1
-        new_op = f"you have listed {number_item} items from all the warehouses."
-    elif len(list_stock_item) == 0 or int(warehouse_choice) <= 0:
-        print("it doesn't looks like this warehouse exists yet.")
-    elif list_stock_item != None:
-        for item in list_stock_item:
-            number_item += 1
-        new_op = f"you have listed {number_item} items from warehouse {warehouse_choice}."
-
-    list_of_operations.append(new_op)
-
-
-    new_operation()
 
 
 
@@ -150,15 +238,13 @@ def search_item(user_name):
 
     item_searched : str = ""
     while len(item_searched) == 0:
-            item_searched = input('\nPlease enter the name of the item you are looking for: ').capitalize()
-    
-    print("\n  - To go back to the main menu type 'q'\n")
+        item_searched = input(f"\nEnter the name of the item you are looking for. -- Type 'q' to go back to the main menu: ").capitalize()
+
     # if user press 'q' then back to the menu:
     if item_searched == 'q':
         menu(user_name)
     else:
         pass
-
 
     # display items in warehouse from the dictionary key 'category'.
     #     # if the user wants to search all warehouses, then search in all warehouses.
@@ -169,7 +255,6 @@ def search_item(user_name):
     #     elif int(warehouse_choice) == item['warehouse'] and item_searched == item['category']:
     #         number_item += 1
     #         print(f"product {num}: {item}\n")
-
 
     # list_products_searched added to record of operations performed
     add_search_item = f"You searched for '{item_searched}'."
@@ -193,9 +278,6 @@ def search_item(user_name):
         # display the amount of item found.
         print(f"There is {len(list_item_searched)} items available for '{item_searched}'.\n\n")
 
-
-
-
     user_order = None
     while user_order not in ['y', 'yes', 'no', 'n']:
         user_order = input(f"Would you like to order this item: '{item_searched}'?(y/n).  ").lower()
@@ -209,17 +291,23 @@ def search_item(user_name):
             print('Invalid choice. Please choose from the option: y or n.')
             
 
-    return list_item_searched, item_searched
+    return list_item_searched, item_searched,
 
 
-
-@password_validator
+@credential_validator
 def ordering(list_item_searched: list, item_searched: str ):
     ''' function to order available products'''
 
     order_process = False
     while order_process == False:
-        item_order_qty = int(input('how many would you like to order?  '))
+        item_order_qty: int = None
+
+        while item_order_qty == None:
+
+            try:
+                item_order_qty = int(input('how many would you like to order?  '))
+            except ValueError:
+                print(f"Invalid entry, please type only a valid number")
 
         if item_order_qty > len(list_item_searched):
             print('           ', '*'*50)
@@ -250,8 +338,6 @@ def ordering(list_item_searched: list, item_searched: str ):
             list_of_operations.pop(-1)
             list_op = f"you ordered {item_order_qty} {item_searched}."
             list_of_operations.append(list_op)
-        print(f"list of op: \n {list_of_operations}")
-
 
     new_operation()
 
@@ -260,7 +346,6 @@ def browse_by_category():
     ''' user can browse the stock warehouse by category'''
     print(f"function not implemented yet...")
     new_operation()
-
 
 
 def exit(user_name):
@@ -278,15 +363,18 @@ def exit(user_name):
     print(f"\nThank you for using our inventory management system.\n\nGoodbye {user_name}!")
 
 
+# def main():
+#     user_name = get_username()
+#     greet_user(user_name)
+#     menu(user_name)
 
-def main():
+
+if __name__ == "__main__":
+    # main()
     user_name = get_username()
     greet_user(user_name)
     menu(user_name)
 
-
-if __name__ == "__main__":
-    main()
-
-
 # state : new, red Original, Second hand, Brand new, White,  .... to copy when ran
+
+# https://hurawatch.cc/watch-tv/watch-the-office-online-39383.4892284
